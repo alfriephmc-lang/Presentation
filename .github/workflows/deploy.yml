@@ -4,7 +4,6 @@ on:
   push:
     branches: ["main"]
 
-# ADD THIS SECTION BELOW
 permissions:
   contents: read
   pages: write
@@ -12,12 +11,16 @@ permissions:
 
 jobs:
   deploy:
+    # ADD THESE THREE LINES BELOW
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       
-      # Use the "|" separator for safety in case your API key has slashes
       - name: Inject API Key
         run: |
           sed -i "s|REPLACE_ME_WITH_REAL_KEY|${{ secrets.GEMINI_API_KEY }}|g" index.html
