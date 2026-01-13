@@ -2,7 +2,13 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Or your default branch
+    branches: ["main"]
+
+# ADD THIS SECTION BELOW
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
@@ -10,10 +16,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      
+      # Use the "|" separator for safety in case your API key has slashes
       - name: Inject API Key
         run: |
-          sed -i "s/REPLACE_ME_WITH_REAL_KEY/${{ secrets.GEMINI_API_KEY }}/g" index.html
+          sed -i "s|REPLACE_ME_WITH_REAL_KEY|${{ secrets.GEMINI_API_KEY }}|g" index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -21,7 +28,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Location of your index.html
+          path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
