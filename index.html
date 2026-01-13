@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI in the Philippine Workforce</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>AI Reskilling Roadmap</h1>
+    
+    <input type="text" id="roleInput" placeholder="Enter your job role (e.g., BPO Agent)">
+    <button onclick="handleUserClick()">Get My Roadmap</button>
+
+    <div id="resultDisplay">
+        </div>
+
+    <script>
+       /**
+ * Revised API logic for Client-Side Deployment
+ * Note: For production, consider using a proxy to hide your API Key.
+ */
+async function generateReskillingPath(role) {
+    const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; // Replace with your key
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const systemPrompt = `You are a DTI Labor Market Strategist and Career Counselor specializing in future-proofing careers in the Philippines. Given the high automation risk for the role of '${role}', provide a specific, actionable, three-stage (Year 1, Year 2, Year 3) upskilling path to help the individual pivot to an AI-resilient role. Each stage must be concise, focus on relevant certifications/skills (e.g., Python basics, Prompt Engineering course, data visualization), and acknowledge the current Philippine job market realities. The total response must be a single paragraph of actionable advice.`;
+
+    const payload = {
+        contents: [{
+            parts: [{ text: `What is the most effective 3-year reskilling roadmap for a person currently working as a ${role} in the Philippines?` }]
+        }],
+        systemInstruction: {
+            parts: [{ text: systemPrompt }]
+        }
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error.message || "API request failed");
+        }
+
+        const result = await response.json();
+        return result.candidates[0].content.parts[0].text;
+
+    } catch (error) {
+        console.error("Error generating reskilling path:", error);
+        return "I'm sorry, I couldn't generate the path right now. Please try again later.";
+    }
+}
+
+// Example: How to trigger it from your HTML button
+async function handleUserClick() {
+    const roleInput = document.getElementById('roleInput').value;
+    const resultDiv = document.getElementById('resultDisplay');
+    
+    resultDiv.innerText = "Consulting DTI Strategist...";
+    
+    const advice = await generateReskillingPath(roleInput);
+    resultDiv.innerText = advice;
+}
+
+
+</script>
+</body>
+</html>
