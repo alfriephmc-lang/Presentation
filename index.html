@@ -26,6 +26,10 @@
     <style>
         .chart-container { position: relative; width: 100%; max-width: 600px; margin: auto; height: 320px; padding: 1rem; background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
         body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; scroll-behavior: smooth; }
+        /* Custom scrollbar for the modal */
+        .modal-scroll::-webkit-scrollbar { width: 8px; }
+        .modal-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .modal-scroll::-webkit-scrollbar-thumb { background: #00796B; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen antialiased text-neutral-dark">
@@ -35,18 +39,19 @@
         <header class="mb-12 border-b border-gray-200 pb-4">
             <h1 class="text-4xl font-extrabold text-teal-deep tracking-tight sm:text-5xl">AI and the Philippine Workforce</h1>
             <p class="mt-2 text-xl text-gray-500">The Duality of Disruption: Analyzing Job Displacement vs. New Job Creation (2024-2030)</p>
-            <nav class="mt-4 flex space-x-4">
+            <nav class="mt-4 flex flex-wrap gap-4 items-center">
                 <a href="#dashboard" class="text-teal-deep hover:text-coral-soft font-semibold transition-colors">Overview</a>
                 <a href="#displacement" class="text-teal-deep hover:text-coral-soft font-semibold transition-colors">The Challenge</a>
                 <a href="#creation" class="text-teal-deep hover:text-coral-soft font-semibold transition-colors">The Opportunity</a>
                 <a href="#strategy" class="text-teal-deep hover:text-coral-soft font-semibold transition-colors">Reskilling Planner</a>
+                <button onclick="toggleModal()" class="bg-teal-deep text-white px-4 py-1.5 rounded-full text-sm font-medium hover:bg-coral-soft transition-all shadow-md flex items-center gap-2">
+                    💡 AI Prompting Guide
+                </button>
             </nav>
         </header>
 
         <section id="dashboard" class="py-12">
             <h2 class="text-3xl font-bold mb-6 text-neutral-dark">Workforce Impact Dashboard</h2>
-            <p class="mb-8 text-gray-700">This dashboard presents the immediate and projected macroeconomic impact of generative AI on Philippine employment.</p>
-            
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-impact-neg transform hover:scale-[1.02] transition-transform">
                     <p class="text-sm font-medium text-gray-500">Jobs Vulnerable to Automation</p>
@@ -83,8 +88,8 @@
             <div class="bg-white p-8 rounded-xl shadow-2xl border-l-8 border-coral-soft">
                 <div class="md:flex md:space-x-6 space-y-4 md:space-y-0 items-center mb-6">
                     <div class="flex-grow">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Role:</label>
-                        <select id="role-selector" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Role to Reskill:</label>
+                        <select id="role-selector" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-teal-deep focus:border-teal-deep">
                             <option value="BPO Call Center Agent">BPO Call Center Agent</option>
                             <option value="Data Entry Clerk">Data Entry Clerk</option>
                             <option value="Administrative Assistant">Administrative Assistant</option>
@@ -92,25 +97,66 @@
                             <option value="Manufacturing Line Worker">Manufacturing Line Worker</option>
                         </select>
                     </div>
-                    <button id="generate-reskilling-btn" class="px-6 py-2 rounded-full text-white bg-coral-soft hover:bg-coral-soft/90 transition-colors">
+                    <button id="generate-reskilling-btn" class="px-8 py-2.5 rounded-full text-white bg-coral-soft hover:bg-opacity-90 transition-all shadow-lg font-bold">
                         Generate 3-Year Path
                     </button>
                 </div>
 
-                <div id="loading-indicator" class="hidden text-center py-4">
-                    <div class="animate-spin inline-block w-6 h-6 border-4 border-teal-deep border-t-transparent rounded-full mr-3"></div>
-                    <span class="text-teal-deep">Consulting DTI Strategist AI...</span>
+                <div id="loading-indicator" class="hidden text-center py-8">
+                    <div class="animate-spin inline-block w-8 h-8 border-4 border-teal-deep border-t-transparent rounded-full mb-2"></div>
+                    <p class="text-teal-deep font-medium">Consulting DTI Labor Strategist AI...</p>
                 </div>
 
-                <div id="analysis-output" class="mt-6 p-4 min-h-[100px] border border-gray-200 rounded-lg bg-neutral-light shadow-inner">
-                    <p class="text-gray-500 italic">Plan will appear here...</p>
+                <div id="analysis-output" class="mt-6 p-6 min-h-[150px] border border-gray-200 rounded-xl bg-neutral-light shadow-inner">
+                    <p class="text-gray-500 italic text-center py-10">Select a job role and click generate to see your AI-powered career roadmap.</p>
                 </div>
             </div>
         </section>
 
         <footer class="mt-20 border-t border-gray-200 pt-6 text-center text-sm text-gray-500">
-            <p>&copy; 2026 AI Workforce Report. Deploying via GitHub Pages.</p>
+            <p>&copy; 2026 AI Workforce Report | Built with Gemini API & GitHub Actions</p>
         </footer>
+    </div>
+
+    <div id="prompt-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center bg-teal-deep text-white">
+                <h3 class="text-xl font-bold">Prompting Like a Professional</h3>
+                <button onclick="toggleModal()" class="hover:text-coral-soft text-2xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-8 overflow-y-auto modal-scroll space-y-6">
+                <p class="text-gray-600 leading-relaxed">Effective prompting isn't just asking questions; it's providing the right context. We use the <strong>C.R.E.A.D.</strong> framework behind the scenes:</p>
+                
+                
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-teal-deep/5 p-4 rounded-lg border-l-4 border-teal-deep">
+                        <span class="font-bold text-teal-deep">Role (Persona)</span>
+                        <p class="text-xs mt-1 italic">"Act as a DTI Career Strategist..."</p>
+                    </div>
+                    <div class="bg-coral-soft/5 p-4 rounded-lg border-l-4 border-coral-soft">
+                        <span class="font-bold text-coral-soft">Context</span>
+                        <p class="text-xs mt-1 italic">"In the Philippine BPO market..."</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-5 rounded-xl border border-dashed border-gray-300">
+                    <h4 class="font-bold text-gray-800 mb-2 underline">The Golden Formula</h4>
+                    <p class="text-sm font-mono bg-white p-3 rounded border">Persona + Context + Specific Task + Constraints</p>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="font-bold text-teal-deep">Presentation Tips:</h4>
+                    <ul class="space-y-3">
+                        <li class="flex gap-2 text-sm"><span class="text-coral-soft font-bold">✔</span> <strong>Iterate:</strong> If the AI is too broad, ask it to "Explain Year 1 in weekly steps."</li>
+                        <li class="flex gap-2 text-sm"><span class="text-coral-soft font-bold">✔</span> <strong>Localize:</strong> Always mention "Philippine setting" or "TESDA" to get relevant local data.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 text-right">
+                <button onclick="toggleModal()" class="bg-teal-deep text-white px-8 py-2 rounded-full font-bold hover:bg-coral-soft transition-colors">Got it!</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -122,7 +168,7 @@
                     labels: ['Data Entry', 'BPO Agent', 'Admin', 'Manufacturing', 'Transport'],
                     datasets: [{ data: [85, 78, 65, 55, 40], backgroundColor: '#DC3545' }]
                 },
-                options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+                options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
             });
 
             new Chart(document.getElementById('growthChart'), {
@@ -131,13 +177,17 @@
                     labels: ['Prompt Engineer', 'AI Governance', 'Data Scientist', 'Robotics', 'Digital Marketing'],
                     datasets: [{ data: [450, 380, 320, 280, 200], backgroundColor: '#28A745' }]
                 },
-                options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+                options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
             });
         });
 
-        // --- GITHUB DEPLOYMENT AI LOGIC ---
-        // DO NOT PASTE YOUR KEY HERE. 
-        // The GitHub Action will replace this placeholder automatically during deployment.
+        // --- MODAL TOGGLE ---
+        function toggleModal() {
+            const modal = document.getElementById('prompt-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // --- AI LOGIC ---
         const GEMINI_API_KEY = "REPLACE_ME_WITH_REAL_KEY"; 
 
         const btn = document.getElementById('generate-reskilling-btn');
@@ -151,40 +201,46 @@
             btn.disabled = true;
             output.innerHTML = "";
 
-            // System prompt to ensure the AI acts as a PH labor expert
-            const systemPrompt = `You are a DTI Labor Market Strategist. Provide a 3-year upskilling path for '${role}' in the Philippines. Use bullet points for Year 1, 2, and 3. Mention specific local platforms like SkillsFuture (if applicable) or TESDA.`;
+            const systemPrompt = `You are a DTI Labor Market Strategist. Provide a 3-year upskilling path for '${role}' in the Philippines. Use bold headers for Year 1, Year 2, and Year 3. Use bullet points. Mention specific local context like TESDA or Filipino remote work platforms. Keep it practical.`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                // Using 1.5-flash for the most stable Free Tier quota
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Generate a 3-year roadmap for ${role}` }] }],
+                        contents: [{ 
+                            role: "user",
+                            parts: [{ text: `Generate a detailed 3-year resilience roadmap for ${role}` }] 
+                        }],
                         systemInstruction: { parts: [{ text: systemPrompt }] }
                     })
                 });
 
                 const data = await response.json();
-                
                 if (data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text;
                 
-                // Formats the AI text to handle line breaks properly in HTML
-                const formattedText = aiText.replace(/\n/g, '<br>');
-                
+                // Formatting: Handle bold text and line breaks
+                const formattedText = aiText
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
                 output.innerHTML = `
-                    <div class="prose prose-sm max-w-none">
-                        <h4 class="text-xl font-bold text-teal-deep mb-3 border-b pb-2">${role} Resilience Strategy</h4>
-                        <div class="text-gray-800 leading-relaxed">${formattedText}</div>
+                    <div class="prose max-w-none animate-in fade-in duration-700">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h4 class="text-xl font-bold text-teal-deep">${role} Strategy Report</h4>
+                            <span class="text-xs bg-teal-deep/10 text-teal-deep px-2 py-1 rounded">PH Market Context</span>
+                        </div>
+                        <div class="text-gray-800 leading-relaxed space-y-2">${formattedText}</div>
                     </div>`;
 
             } catch (error) {
-                console.error(error);
                 output.innerHTML = `
-                    <div class="p-4 bg-red-50 border border-red-200 rounded-md">
-                        <p class="text-impact-neg font-bold">Strategy Consultation Failed</p>
-                        <p class="text-sm text-red-600">Note: If you just deployed, wait 2-3 minutes for the API key injection to complete. Error: ${error.message}</p>
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                        <p class="text-impact-neg font-bold">Quota/Service Error</p>
+                        <p class="text-sm text-red-600">${error.message}. Wait 60 seconds and try again.</p>
                     </div>`;
             } finally {
                 loader.classList.add('hidden');
@@ -194,5 +250,3 @@
     </script>
 </body>
 </html>
-
-
