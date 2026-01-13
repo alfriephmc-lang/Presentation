@@ -1,71 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI in the Philippine Workforce</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI and the Philippine Workforce</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neutral-light': '#F8F9FA',
+                        'neutral-dark': '#212529',
+                        'teal-deep': '#00796B',
+                        'coral-soft': '#FF6F61',
+                        'impact-neg': '#DC3545', 
+                        'impact-pos': '#28A745', 
+                    },
+                    fontFamily: { inter: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: auto; height: 320px; padding: 1rem; background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; }
+    </style>
 </head>
-<body>
-    <h1>AI Reskilling Roadmap</h1>
-    
-    <input type="text" id="roleInput" placeholder="Enter your job role (e.g., BPO Agent)">
-    <button onclick="handleUserClick()">Get My Roadmap</button>
+<body class="min-h-screen antialiased text-neutral-dark">
 
-    <div id="resultDisplay">
+    <div class="max-w-7xl mx-auto px-4 py-10">
+        <header class="mb-12 border-b border-gray-200 pb-4">
+            <h1 class="text-4xl font-extrabold text-teal-deep tracking-tight sm:text-5xl">AI and the Philippine Workforce</h1>
+            <p class="mt-2 text-xl text-gray-500">The Duality of Disruption: Analyzing Job Displacement vs. New Job Creation (2024-2030)</p>
+        </header>
+
+        <section id="dashboard" class="py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-impact-neg">
+                    <p class="text-sm font-medium text-gray-500">Jobs Vulnerable (2024-2030)</p>
+                    <p class="text-4xl font-extrabold text-impact-neg">3.5M</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-impact-pos">
+                    <p class="text-sm font-medium text-gray-500">New AI-Native Roles</p>
+                    <p class="text-4xl font-extrabold text-impact-pos">1.2M</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-teal-deep">
+                    <p class="text-sm font-medium text-gray-500">Net Employment Change</p>
+                    <p class="text-4xl font-extrabold text-teal-deep">-2.3M</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 py-12">
+            <section class="p-8 bg-white rounded-xl shadow-2xl border border-impact-neg/20">
+                <h3 class="text-2xl font-bold mb-4 text-impact-neg">🔻 The Challenge</h3>
+                <div class="chart-container"><canvas id="vulnerabilityChart"></canvas></div>
+            </section>
+            <section class="p-8 bg-white rounded-xl shadow-2xl border border-impact-pos/20">
+                <h3 class="text-2xl font-bold mb-4 text-impact-pos">✨ The Opportunity</h3>
+                <div class="chart-container"><canvas id="growthChart"></canvas></div>
+            </section>
         </div>
 
+        <section id="strategy" class="py-12">
+            <h2 class="text-3xl font-bold mb-6 text-teal-deep">Workforce Resilience Planner (AI-Powered)</h2>
+            <div class="bg-white p-8 rounded-xl shadow-2xl border-l-8 border-coral-soft">
+                <div class="md:flex md:space-x-6 items-center mb-6">
+                    <div class="flex-grow">
+                        <select id="role-selector" class="block w-full p-2 border border-gray-300 rounded-md">
+                            <option value="BPO Call Center Agent">BPO Call Center Agent</option>
+                            <option value="Data Entry Clerk">Data Entry Clerk</option>
+                            <option value="Administrative Assistant">Administrative Assistant</option>
+                            <option value="Junior Financial Analyst">Junior Financial Analyst</option>
+                        </select>
+                    </div>
+                    <button id="generate-reskilling-btn" class="px-6 py-2 rounded-full text-white bg-coral-soft hover:bg-coral-soft/90">
+                        Generate 3-Year Reskilling Path
+                    </button>
+                </div>
+                <div id="loading-indicator" class="hidden text-center py-4">
+                    <div class="animate-spin inline-block w-6 h-6 border-4 border-teal-deep border-t-transparent rounded-full mr-3"></div>
+                    <span>Consulting DTI Strategy...</span>
+                </div>
+                <div id="analysis-output" class="mt-6 p-4 min-h-[100px] border border-gray-200 rounded-lg bg-neutral-light">
+                    <p class="text-gray-500 italic">Select a role and click the button to begin.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <script>
-       /**
- * Revised API logic for Client-Side Deployment
- * Note: For production, consider using a proxy to hide your API Key.
- */
-async function generateReskillingPath(role) {
-    const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; // Replace with your key
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // 1. CHART LOGIC
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctxV = document.getElementById('vulnerabilityChart').getContext('2d');
+            new Chart(ctxV, {
+                type: 'bar',
+                data: {
+                    labels: ['Data Entry', 'BPO Agent', 'Admin', 'Manufacturing', 'Transport'],
+                    datasets: [{ label: 'Risk %', data: [85, 78, 65, 55, 40], backgroundColor: '#DC3545' }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+            });
 
-    const systemPrompt = `You are a DTI Labor Market Strategist and Career Counselor specializing in future-proofing careers in the Philippines. Given the high automation risk for the role of '${role}', provide a specific, actionable, three-stage (Year 1, Year 2, Year 3) upskilling path to help the individual pivot to an AI-resilient role. Each stage must be concise, focus on relevant certifications/skills (e.g., Python basics, Prompt Engineering course, data visualization), and acknowledge the current Philippine job market realities. The total response must be a single paragraph of actionable advice.`;
-
-    const payload = {
-        contents: [{
-            parts: [{ text: `What is the most effective 3-year reskilling roadmap for a person currently working as a ${role} in the Philippines?` }]
-        }],
-        systemInstruction: {
-            parts: [{ text: systemPrompt }]
-        }
-    };
-
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            const ctxG = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctxG, {
+                type: 'bar',
+                data: {
+                    labels: ['Prompt Engineer', 'AI Governance', 'Data Scientist', 'Robotics', 'Digital Marketing'],
+                    datasets: [{ label: 'Growth %', data: [450, 380, 320, 280, 200], backgroundColor: '#28A745' }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+            });
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error.message || "API request failed");
+        // 2. AI API LOGIC (REPLACING GOOGLE.SCRIPT.RUN)
+        const GEMINI_API_KEY = "YOUR_API_KEY_HERE"; // Replace this!
+
+        async function getAIResponse(role) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const prompt = `You are a DTI Labor Market Strategist. Provide a 3-year reskilling path for a ${role} in the Philippines to become AI-resilient. Use one concise paragraph.`;
+            
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
         }
 
-        const result = await response.json();
-        return result.candidates[0].content.parts[0].text;
+        // 3. UI INTERACTION
+        const btn = document.getElementById('generate-reskilling-btn');
+        const output = document.getElementById('analysis-output');
+        const loader = document.getElementById('loading-indicator');
+        const selector = document.getElementById('role-selector');
 
-    } catch (error) {
-        console.error("Error generating reskilling path:", error);
-        return "I'm sorry, I couldn't generate the path right now. Please try again later.";
-    }
-}
-
-// Example: How to trigger it from your HTML button
-async function handleUserClick() {
-    const roleInput = document.getElementById('roleInput').value;
-    const resultDiv = document.getElementById('resultDisplay');
-    
-    resultDiv.innerText = "Consulting DTI Strategist...";
-    
-    const advice = await generateReskillingPath(roleInput);
-    resultDiv.innerText = advice;
-}
-
-
-</script>
+        btn.addEventListener('click', async () => {
+            const role = selector.value;
+            loader.classList.remove('hidden');
+            output.classList.add('opacity-50');
+            
+            try {
+                const result = await getAIResponse(role);
+                output.innerHTML = `<p class="font-bold text-teal-deep">${role} Path:</p><p>${result}</p>`;
+            } catch (e) {
+                output.innerHTML = `<p class="text-red-500">Error connecting to AI. Please check your API key.</p>`;
+            } finally {
+                loader.classList.add('hidden');
+                output.classList.remove('opacity-50');
+            }
+        });
+    </script>
 </body>
 </html>
